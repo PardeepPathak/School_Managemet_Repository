@@ -1,0 +1,63 @@
+server:
+  port: 5053
+debug: true
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: OAuth2-Server
+  cloud:
+    compatibility-verifier:
+      enabled: false
+jwt:
+  secret= mysecretkey
+eureka:
+   client:
+      serviceUrl:
+         defaultZone: http://localhost:8761/eureka
+      instance:
+      preferIpAddress: true
+      
+logging:
+  file:
+    name: C:/Users/pardpath/OneDrive - Cisco/Desktop/Project Files/logs/O-Auth2-Service.log
+  level:
+    root: INFO
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss}-%msg%n"
+management:
+  health:
+    circuitbreakers:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+resilience4j:
+  circuitbreaker:
+    instances:
+      studentcontr:
+        registerHealthIndicator: true
+        eventConsumerBufferSize: 10
+        failureRateThreshold: 50
+        minimumNumberOfCalls: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 5s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        slidingWindowType: COUNT_BASED
+  retry:
+    instances:
+      studentcontr:
+        maxRetryAttempts: 5
+        waitDuration: 10s
+  ratelimiter:
+    instances:
+      studentcontr:
+        registerHealthIndicator: true
+        limitForPeriod: 10
+        limitRefreshPeriod: 10s
+        timeoutDuration: 3s
