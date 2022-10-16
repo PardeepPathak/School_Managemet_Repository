@@ -1,28 +1,30 @@
 package com.database.mongo.Controller;
 
 import java.util.List;
-import java.util.Optional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+//import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.database.mongo.Model.User;
 import com.database.mongo.repository.UserRepo;
-import com.database.mongo.utils.UserNotFoundException;
 
 @RestController
 @RequestMapping("/user")
 public class UserController {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(UserController.class);
+
+//   Logger logger= LogManager.getLogger(UserController.class);
 
 	@Autowired
 	private UserRepo userRepo;
@@ -59,6 +61,12 @@ public class UserController {
 	public void deleteUser(@PathVariable String id) {
 		LOGGER.info("inside deleteUser()"+id);
 		userRepo.deleteById(id);
+	}
+	@PutMapping()
+	public String updateUserData(@RequestBody User user) {
+		userRepo.save(user);
+		return "User updated SuccessFuly";
+		
 	}
 
 }

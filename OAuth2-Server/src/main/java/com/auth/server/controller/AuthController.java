@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -96,12 +97,12 @@ public class AuthController {
 		} else {
 			strRoles.forEach(role -> {
 				switch (role) {
-				case "admin":
+				case "Admin":
 					Role adminRole = roleProxy.getRole(ERole.ROLE_ADMIN)
 							.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
 					roles.add(adminRole);
 					break;
-				case "teacher":
+				case "Teacher":
 					Role teacherRole = roleProxy.getRole(ERole.ROLE_TEACHER)
 							.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
 					roles.add(teacherRole);
@@ -118,7 +119,12 @@ public class AuthController {
 	user.setRoles(roles);
 		userProxy.saveUserData(user);
 		return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+		}
+	@PutMapping
+	public ResponseEntity<?>  updateData(@RequestBody User user){
+		userProxy.updateUserData(user);
+		return ResponseEntity.ok(new MessageResponse("User Updated successfully!"));
+		
 	}
-	
 	
 }

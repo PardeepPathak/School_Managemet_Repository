@@ -97,9 +97,9 @@ public class StudentController {
 
 	@GetMapping
 //	@PreAuthorize("hasRole('STUDENT') or hasRole('ADMIN') or hasRole('TEACHER')")
-	@CircuitBreaker(name = "studentcontr", fallbackMethod = "studentContrFallback")
-	@Retry(name = "studentcontr")
-	@RateLimiter(name = "studentcontr")
+//	@CircuitBreaker(name = "studentcontr", fallbackMethod = "studentContrFallback")
+//	@Retry(name = "studentcontr")
+//	@RateLimiter(name = "studentcontr")
 	public List<Student> getallStudentData() {
 		LOGGER.info("Inside getallStudentData() Student AuthApiStudentController => ");
 		return proxy.getAllStudent();
