@@ -2,13 +2,13 @@ package com.auth.server.controller;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
+
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -36,12 +36,17 @@ import com.auth.server.response.MessageResponse;
 import com.auth.server.security.jwt.JwtUtils;
 import com.auth.server.security.service.UserDetailsImpl;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.retry.annotation.Retry;
+
+@CrossOrigin(origins = "http://localhost:4200", maxAge = 3600)
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-	
-	private static final Logger LOGGER = LoggerFactory.getLogger(AuthController.class);
+
+	private static final Logger LOGGER = LogManager.getLogger(AuthController.class);
+
 	@Autowired
 	AuthenticationManager authenticationManager;
 	@Autowired
@@ -52,42 +57,41 @@ public class AuthController {
 	private UserProxy userProxy;
 	@Autowired
 	private RoleProxy roleProxy;
-	
+
 	@GetMapping("/{email}")
-	public User getUserByEmail(@PathVariable String email){
-		LOGGER.info("Inside  getUserByEmail()  AuthController => "+email);
+	public User getUserByEmail(@PathVariable String email) {
+		LOGGER.info("Inside  getUserByEmail()  AuthController => " + email);
 		return userProxy.findByUsername(email);
 	}
-	
+
 	@PostMapping("/signin")
+//	@CircuitBreaker(name = "studentcontr", fallbackMethod = "oauthContrFallback")
+//	@Retry(name = "studentcontr")
+//	@RateLimiter(name = "studentcontr")
 	public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-		LOGGER.info("Inside  authenticateUser()  AuthController => "+loginRequest);
+		LOGGER.info("Inside  authenticateUser()  AuthController => " + loginRequest);
 		Authentication authentication = authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 		String jwt = jwtUtils.generateJwtToken(authentication);
-		
-		UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();		
-		List<String> roles = userDetails.getAuthorities().stream()
-				.map(item -> item.getAuthority())
+
+		UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+		List<String> roles = userDetails.getAuthorities().stream().map(item -> item.getAuthority())
 				.collect(Collectors.toList());
-		return ResponseEntity.ok(new JwtResponse(jwt, 
-												 userDetails.getId(), 
-												 userDetails.getUsername(), 
-												 roles));
+		return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(), roles));
 	}
-	
+
 	@PostMapping("/signup")
+	@CircuitBreaker(name = "studentcontr", fallbackMethod = "oauthContrFallback")
+	@Retry(name = "studentcontr")
+	@RateLimiter(name = "studentcontr")
 	public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
-		LOGGER.info("Inside  registerUser()  AuthController => "+signUpRequest);
+		LOGGER.info("Inside  registerUser()  AuthController => " + signUpRequest);
 		if (userProxy.existByEmail(signUpRequest.getEmail())) {
-			return ResponseEntity
-					.badRequest()
-					.body(new MessageResponse("Error: Email is already in use!"));
+			return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already in use!"));
 		}
 		// Create new user's account
-		User user = new User(signUpRequest.getEmail(),
-				 encoder.encode(signUpRequest.getPassword()));
+		User user = new User(signUpRequest.getEmail(), encoder.encode(signUpRequest.getPassword()));
 		Set<String> strRoles = signUpRequest.getRoles();
 		Set<Role> roles = new HashSet<>();
 		if (strRoles == null) {
@@ -114,17 +118,35 @@ public class AuthController {
 				}
 			});
 		}
-		
-	LOGGER.info("Inside  registerUser()  AuthController => "+user);	
-	user.setRoles(roles);
+
+		LOGGER.info("Inside  registerUser()  AuthController => " + user);
+		user.setRoles(roles);
 		userProxy.saveUserData(user);
 		return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
-		}
+	}
+
 	@PutMapping
-	public ResponseEntity<?>  updateData(@RequestBody User user){
+	@CircuitBreaker(name = "studentcontr", fallbackMethod = "oauthContrFallback")
+	@Retry(name = "studentcontr")
+	@RateLimiter(name = "studentcontr")
+	public ResponseEntity<?> updateData(@RequestBody User user) {
 		userProxy.updateUserData(user);
 		return ResponseEntity.ok(new MessageResponse("User Updated successfully!"));
-		
+
 	}
-	
+
+	@GetMapping("/all")
+	public ResponseEntity<?> availableForAll() {
+		return ResponseEntity.ok("Welcome Back To School Online!!");
+	}
+
+	@GetMapping("/admin")
+	public ResponseEntity<?> availableForAdmin() {
+		return ResponseEntity.ok("Welcome Admin Board!!");
+	}
+
+	public ResponseEntity<?> oauthContrFallback(Exception e) {
+		return ResponseEntity.ok("Service is Temporary Unavailabe Please Try After Some Time");
+	}
+
 }

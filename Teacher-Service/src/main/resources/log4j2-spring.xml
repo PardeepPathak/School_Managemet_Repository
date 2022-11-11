@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Appenders>
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout
+                    pattern="%d{dd-MM-yyyy HH:mm:ss.SSS} %magenta([%thread]) %highlight(%-5level) %logger.%M - %msg%n" />
+        </Console>
+        <SplunkHttp
+                name="splunkhttp"
+                url="http://localhost:8088"
+                token="ece7a6de-2993-49f3-a741-0f21c79fa72b"
+                host="localhost"
+                index="teacher_api_dev"
+                type="_json"
+                source="http-teacherService-logs"
+                sourcetype="log4j"
+                messageFormat="_json"
+                disableCertificateValidation="true">
+            <PatternLayout pattern="%m" />
+        </SplunkHttp>
+
+    </Appenders>
+
+    <Loggers>
+        <!-- LOG everything at INFO level -->
+        <Root level="info">
+            <AppenderRef ref="console" />
+            <AppenderRef ref="splunkhttp" />
+        </Root>
+    </Loggers>
+</Configuration>

@@ -1,12 +1,13 @@
 package com.auth.server.controller;
 
 import java.util.HashMap;
-import java.util.List;
+
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -24,12 +25,16 @@ import com.auth.server.proxy.TeacherProxy;
 import com.auth.server.proxy.UserProxy;
 import com.auth.server.utils.ResourceNotFoundException;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.retry.annotation.Retry;
+
+@CrossOrigin(origins = "http://localhost:4200", maxAge = 3600)
 @RestController
 @RequestMapping("/teacher")
 public class TeacherController {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(TeacherController.class);
+	private static final Logger LOGGER = LogManager.getLogger(TeacherController.class);
 
 	@Autowired
 	private TeacherProxy teacherProxy;
@@ -37,21 +42,31 @@ public class TeacherController {
 	private UserProxy userProxy;
 
 	@GetMapping
-//	@PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
-	public List<Teacher> getAllTeacherData() {
+	@PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
+	@CircuitBreaker(name = "studentcontr", fallbackMethod = "teacherContrFallback")
+	@Retry(name = "studentcontr")
+	@RateLimiter(name = "studentcontr")
+	public ResponseEntity<?> getAllTeacherData() {
 		LOGGER.info("Inside getAllTeacherData() AuthApiTeacherController => ");
-		return teacherProxy.getAllTeacher();
+		return ResponseEntity.ok(teacherProxy.getAllTeacher());
 	}
 
 	@GetMapping("/{id}")
-	public ResponseEntity<Teacher> getTeacherById(@PathVariable String id) {
+	@CircuitBreaker(name = "studentcontr", fallbackMethod = "teacherContrFallback")
+	@Retry(name = "studentcontr")
+	@RateLimiter(name = "studentcontr")
+	@PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
+	public ResponseEntity<?> getTeacherById(@PathVariable String id) {
 		LOGGER.info("Inside getTeacherById() AuthApiTeacherController => " + id);
 		Teacher teacher = teacherProxy.getTeacherById(id).orElseThrow(() -> new ResourceNotFoundException());
 		return ResponseEntity.ok(teacher);
 	}
 
 	@PutMapping("/{id}")
-//	@PreAuthorize("hasRole('ADMIN')")
+	@CircuitBreaker(name = "studentcontr", fallbackMethod = "teacherContrFallback")
+	@Retry(name = "studentcontr")
+	@RateLimiter(name = "studentcontr")
+	@PreAuthorize(" hasRole('TEACHER') or hasRole('ADMIN')")
 	public ResponseEntity<?> updateTeacherData(@PathVariable(value = "id") String teacherId,
 			@RequestBody Teacher teacherDetails) {
 		LOGGER.info(
@@ -66,7 +81,7 @@ public class TeacherController {
 	}
 
 	@DeleteMapping("/{id}")
-//	@PreAuthorize("hasRole('ADMIN')")
+	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<Map<String, Boolean>> deleteTeacherData(@PathVariable(value = "id") String teacherId) {
 		LOGGER.info("Inside getTeacherById() AuthApiTeacherController => " + teacherId);
 		Teacher teacher = teacherProxy.getTeacherById(teacherId).orElseThrow(() -> new ResourceNotFoundException());
@@ -76,5 +91,10 @@ public class TeacherController {
 		Map<String, Boolean> response = new HashMap<>();
 		response.put("deleted", Boolean.TRUE);
 		return ResponseEntity.ok(response);
+	}
+
+	public ResponseEntity<?> teacherContrFallback(Exception e) {
+		return new ResponseEntity<Object>("Service is Temporary Unavailabe Please Try After Some Time",
+				HttpStatus.NOT_FOUND);
 	}
 }

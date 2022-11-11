@@ -18,46 +18,46 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.database.mongo.Model.TeacherAssignementUpload;
-import com.database.mongo.serviceImple.TeacherAssignementServiceImple;
-
-@RestController
-@RequestMapping("/teacherAssignement")
+import com.database.mongo.Model.StudentAssignement;
+import com.database.mongo.serviceImple.StudentAssignementServiceImple;
 @CrossOrigin("*")
-public class TeacherAssignementController {
+@RestController
+@RequestMapping("/studentAssignement")
+public class StudentAssignementController {
 	
-	private static final Logger LOGGER = LoggerFactory.getLogger(TeacherAssignementController.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(StudentAssignementController.class);
 	
 	@Autowired
-	private TeacherAssignementServiceImple teacherAssignementServiceImple;
+	private StudentAssignementServiceImple studentAssignementServiceImple;
 	
 	@GetMapping
-	public List<TeacherAssignementUpload> getAllAssignements() {
-		LOGGER.info("INSIDE TeacherAssignementController getAllAssignements()");
-		List<TeacherAssignementUpload> files= teacherAssignementServiceImple.getFiles();
+	public List<StudentAssignement> getAllAssignements() {
+		LOGGER.info("INSIDE StudentAssignementController getAllAssignements()");
+		List<StudentAssignement> files= studentAssignementServiceImple.getFiles();
 		return files;
 	}
 
 	@PostMapping("/uploadFiles")
-	public ResponseEntity<?> uploadMultipleFiles(@RequestParam("files") MultipartFile[] files) throws InterruptedException {
-		Thread.sleep(5000);
-		LOGGER.info("INSIDE TeacherAssignementController uploadMultipleFiles()");
+	public String uploadMultipleFiles(@RequestParam("files") MultipartFile[] files) {
+		LOGGER.info("INSIDE StudentAssignementController uploadMultipleFiles()");
 		for (MultipartFile file: files) {
-			LOGGER.info("INSIDE TeacherAssignementController uploadMultipleFiles()");
-			teacherAssignementServiceImple.saveFile(file);
+			LOGGER.info("INSIDE StudentAssignementController uploadMultipleFiles()");
+			studentAssignementServiceImple.saveFile(file);
+			
 		}
-		LOGGER.info("INSIDE TeacherAssignementController uploadMultipleFiles() completed");
-		return ResponseEntity.ok("File Uploaded SuccessFully");
+		LOGGER.info("INSIDE StudentAssignementController uploadMultipleFiles() completed");
+		return "file uploaded successfully";
 	}
 	@GetMapping("/downloadFile/{fileId}")
 	public ResponseEntity<ByteArrayResource> downloadFile(@PathVariable String fileId){
-		LOGGER.info("INSIDE TeacherAssignementController downloadFile()");
-		TeacherAssignementUpload doc = teacherAssignementServiceImple.getFile(fileId).get();
-		LOGGER.info("INSIDE TeacherAssignementController downloadFile() Downloaded successfully");
+		LOGGER.info("INSIDE StudentAssignementController downloadFile()");
+		StudentAssignement doc = studentAssignementServiceImple.getFile(fileId).get();
+		LOGGER.info("INSIDE StudentAssignementController downloadFile() Downloaded successfully");
 		return ResponseEntity.ok()
 				.contentType(MediaType.parseMediaType(doc.getFileType()))
 				.header(HttpHeaders.CONTENT_DISPOSITION,"attachment:filename=\""+doc.getFileName()+"\"")
 				.body(new ByteArrayResource(doc.getData()));
 	}
+
 
 }

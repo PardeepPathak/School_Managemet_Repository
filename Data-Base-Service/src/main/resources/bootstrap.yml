@@ -9,7 +9,10 @@ spring:
 logging:
   file:
     name: C:/Users/pardpath/OneDrive - Cisco/Desktop/Project Files/logs/Data-Base-Service.log
-  level:
-    root: INFO
-  pattern:
-    file: "%d{yyyy-MM-dd HH:mm:ss}-%msg%n"
+      
+
+#  level:
+#    root: INFO
+#  pattern:
+#    file: "%d{dd-MM-yyyy HH:mm:ss.SSS} %magenta([%thread]) %highlight(%-5level) %logger.%M - %msg%n"
+#  console:  "%d{dd-MM-yyyy HH:mm:ss.SSS} %magenta([%thread]) %highlight(%-5level) %logger.%M - %msg%n"

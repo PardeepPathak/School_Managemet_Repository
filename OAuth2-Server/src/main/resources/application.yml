@@ -9,6 +9,14 @@ spring:
   cloud:
     compatibility-verifier:
       enabled: false
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 1045782700258-t0bs0cus78l4qklvod2nhb2gtugdigpp.apps.googleusercontent.com
+            client-secret: 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
+          
 jwt:
   secret= mysecretkey
 eureka:
@@ -21,10 +29,12 @@ eureka:
 logging:
   file:
     name: C:/Users/pardpath/OneDrive - Cisco/Desktop/Project Files/logs/O-Auth2-Service.log
-  level:
-    root: INFO
-  pattern:
-    file: "%d{yyyy-MM-dd HH:mm:ss}-%msg%n"
+#  level:
+#    root: INFO
+#  pattern:
+#    file: "%d{dd-MM-yyyy HH:mm:ss.SSS} %magenta([%thread]) %highlight(%-5level) %logger.%M - %msg%n"
+#  console:  "%d{dd-MM-yyyy HH:mm:ss.SSS} %magenta([%thread]) %highlight(%-5level) %logger.%M - %msg%n"
+#  
 management:
   health:
     circuitbreakers:
@@ -61,3 +71,11 @@ resilience4j:
         limitForPeriod: 10
         limitRefreshPeriod: 10s
         timeoutDuration: 3s
+        
+#okta:
+#  oauth2:
+#    issuer: https://dev-69836709.okta.com/oauth2/default
+# 
+#    client-id: 0oa76a1f1mSPARFyq5d7
+#    
+#    client-secret: -1jVBdxOJjt5ppP5FhFg00vQhBqhr5TCHY4Juc0B

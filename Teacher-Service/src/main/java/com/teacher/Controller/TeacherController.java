@@ -3,8 +3,8 @@ package com.teacher.Controller;
 import java.util.List;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +21,7 @@ import com.teacher.proxy.TeacherProxy;
 @RequestMapping("/teacher")
 public class TeacherController {
 	
-	private static final Logger LOGGER = LoggerFactory.getLogger(TeacherController.class);
+	private static final Logger LOGGER =LogManager.getLogger(TeacherController.class);
 	
 	@Autowired
 	private TeacherProxy proxy;

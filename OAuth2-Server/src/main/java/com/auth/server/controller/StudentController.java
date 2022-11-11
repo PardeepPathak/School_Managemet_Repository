@@ -1,18 +1,18 @@
 package com.auth.server.controller;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+
 import java.util.Map;
-import java.util.Optional;
+
 import java.util.Set;
 
 import javax.validation.Valid;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -32,7 +32,6 @@ import com.auth.server.proxy.UserProxy;
 import com.auth.server.request.SignupRequest;
 import com.auth.server.response.MessageResponse;
 import com.auth.server.utils.ResourceNotFoundException;
-import com.auth.server.utils.UserNotFoundExcept;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
@@ -42,12 +41,12 @@ import com.auth.server.pojo.Student;
 import com.auth.server.pojo.Teacher;
 import com.auth.server.pojo.User;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
+@CrossOrigin(origins = "http://localhost:4200", maxAge = 3600)
 @RestController
 @RequestMapping("/student")
 public class StudentController {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(StudentController.class);
+	private static final Logger LOGGER = LogManager.getLogger(StudentController.class);
 
 	@Autowired
 	private StudentProxy proxy;
@@ -65,6 +64,9 @@ public class StudentController {
 	PasswordEncoder encoder;
 
 	@PostMapping
+	@CircuitBreaker(name = "studentcontr", fallbackMethod = "studentContrFallback")
+	@Retry(name = "studentcontr")
+	@RateLimiter(name = "studentcontr")
 	public ResponseEntity<?> addUserData(@RequestBody Student student) {
 		LOGGER.info("Inside addUserData() AuthApiTeacherController => " + student);
 		if (userProxy.existByEmail(student.getEmail())) {
@@ -96,13 +98,13 @@ public class StudentController {
 	}
 
 	@GetMapping
-//	@PreAuthorize("hasRole('STUDENT') or hasRole('ADMIN') or hasRole('TEACHER')")
-//	@CircuitBreaker(name = "studentcontr", fallbackMethod = "studentContrFallback")
-//	@Retry(name = "studentcontr")
-//	@RateLimiter(name = "studentcontr")
-	public List<Student> getallStudentData() {
+	@PreAuthorize("hasRole('STUDENT') or hasRole('ADMIN') or hasRole('TEACHER')")
+	@CircuitBreaker(name = "studentcontr", fallbackMethod = "studentContrFallback")
+	@Retry(name = "studentcontr")
+	@RateLimiter(name = "studentcontr")
+	public ResponseEntity<?> getallStudentData() {
 		LOGGER.info("Inside getallStudentData() Student AuthApiStudentController => ");
-		return proxy.getAllStudent();
+		return ResponseEntity.ok(proxy.getAllStudent());
 	}
 
 	@DeleteMapping("/{id}")
@@ -119,7 +121,10 @@ public class StudentController {
 	}
 
 	@PutMapping("/{id}")
-//	@PreAuthorize("hasRole('STUDENT') or hasRole('ADMIN')")
+	@CircuitBreaker(name = "studentcontr", fallbackMethod = "studentContrFallback")
+	@Retry(name = "studentcontr")
+	@RateLimiter(name = "studentcontr")
+	@PreAuthorize("hasRole('STUDENT') or hasRole('ADMIN')")
 	public ResponseEntity<?> updateStudentData(@PathVariable(value = "id") String studentId,
 			@Valid @RequestBody Student studentDetails) {
 		LOGGER.info("Inside updateStudentData() Student AuthApiStudentController => " + studentId);
@@ -133,17 +138,19 @@ public class StudentController {
 	}
 
 	@GetMapping("/{id}")
-	public ResponseEntity<Student> getStudentById(@PathVariable String id) {
+	@PreAuthorize("hasRole('STUDENT') or hasRole('ADMIN') or hasRole('TEACHER')")
+	@CircuitBreaker(name = "studentcontr", fallbackMethod = "studentContrFallback")
+	@Retry(name = "studentcontr")
+	@RateLimiter(name = "studentcontr")
+	public ResponseEntity<?> getStudentById(@PathVariable String id) {
 		LOGGER.info("Inside getStudentById() Student AuthApiStudentController => " + id);
 		Student student = proxy.getStudentById(id).orElseThrow(() -> new ResourceNotFoundException());
 		return ResponseEntity.ok(student);
 	}
 
-	public List<Student> studentContrFallback(Exception e) {
-		LOGGER.warn("Inside studentContrFallback() Student AuthApiStudentController => " + e);
-		List<Student> list = new ArrayList<Student>();
-		Student std = new Student("Demo Firstname", "Demo Lastname", "jgjk", "anj", "am", "njaj", "ajj", "kk");
-		list.add(std);
-		return list;
+	public ResponseEntity<Object> studentContrFallback(Exception e) {
+//		return ResponseEntity.ok("Service is Temporary Unavailabe Please Try After Some Time");
+		return new ResponseEntity<Object>("Service is Temporary Unavailabe Please Try After Some Time",
+				HttpStatus.NOT_FOUND);
 	}
 }

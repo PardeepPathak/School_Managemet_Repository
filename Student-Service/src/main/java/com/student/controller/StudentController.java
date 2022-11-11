@@ -2,9 +2,8 @@ package com.student.controller;
 
 import java.util.List;
 import java.util.Optional;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +21,7 @@ import com.student.proxy.StudentProxy;
 @RequestMapping("/student")
 public class StudentController {
 	
-	private static final Logger LOGGER = LoggerFactory.getLogger(StudentController.class);
+	private static final Logger LOGGER = LogManager.getLogger(StudentController.class);
 	
 	@Autowired
 	private StudentProxy proxy;

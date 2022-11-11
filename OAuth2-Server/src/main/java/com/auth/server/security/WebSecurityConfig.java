@@ -16,6 +16,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import com.auth.server.security.jwt.AuthEntryPointJwt;
 import com.auth.server.security.jwt.AuthTokenFilter;
+import com.auth.server.security.service.CustomOAuth2UserService;
 import com.auth.server.security.service.UserDetailsServiceImpl;
 @Configuration
 @EnableWebSecurity
@@ -29,6 +30,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter{
 	UserDetailsServiceImpl userDetailsService;
 	@Autowired
 	private AuthEntryPointJwt unauthorizedHandler;
+	@Autowired
+	private CustomOAuth2UserService oAuth2UserService;
+
 	@Bean
 	public AuthTokenFilter authenticationJwtTokenFilter() {
 		return new AuthTokenFilter();
@@ -51,10 +55,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter{
 		http.cors().and().csrf().disable()
 			.exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
 			.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-			.authorizeRequests().antMatchers("/api/auth/**","/actuator/**").permitAll()
-			.antMatchers("/student/**").permitAll()
-			.antMatchers("/teacher/**").permitAll()
+			.authorizeRequests().antMatchers("/api/auth/**","/actuator/**","oauth2/**").permitAll()
 			.anyRequest().authenticated();
 		http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+		http.oauth2Login()
+        .userInfoEndpoint()
+        .userService(oAuth2UserService);
+
 	}
 }

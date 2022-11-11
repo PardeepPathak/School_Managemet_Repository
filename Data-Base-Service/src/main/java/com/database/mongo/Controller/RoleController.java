@@ -1,9 +1,9 @@
 package com.database.mongo.Controller;
 
 import java.util.Optional;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,7 +18,7 @@ import com.database.mongo.repository.RoleRepo;
 @RequestMapping("/role")
 public class RoleController {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(RoleController.class);
+	private static final Logger LOGGER =  LogManager.getLogger(RoleController.class);
 
 	@Autowired
 	private RoleRepo roleRepo;
